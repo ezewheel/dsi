@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototipo Billeteras Súper</title>
+<style>
+  :root{--bg:#eef1f5;--card:#fff;--ink:#1c2430;--mut:#6b7686;--pri:#0a7d5a;--pri2:#e6f5ef;--warn:#f5a623;--line:#e2e7ee}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font-family:system-ui,Segoe UI,Roboto,sans-serif;color:var(--ink);display:flex;justify-content:center;padding:16px}
+  .phone{width:100%;max-width:390px;min-height:760px;background:var(--card);border-radius:28px;box-shadow:0 10px 40px #0003;overflow:hidden;display:flex;flex-direction:column;border:8px solid #111}
+  header{background:var(--pri);color:#fff;padding:18px 18px 14px}
+  header small{opacity:.85}
+  header h1{margin:2px 0 0;font-size:20px}
+  main{flex:1;padding:16px;overflow:auto}
+  h2{font-size:17px;margin:0 0 10px}
+  p.mut{color:var(--mut);font-size:14px;margin:4px 0 12px}
+  .btn{display:block;width:100%;border:0;border-radius:12px;padding:14px;font-size:16px;font-weight:600;background:var(--pri);color:#fff;cursor:pointer;margin-top:12px}
+  .btn.sec{background:var(--pri2);color:var(--pri)}
+  .wallet{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer}
+  .wallet .dot{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700}
+  .wallet .n{flex:1;font-weight:600}
+  .tog{width:42px;height:24px;border-radius:12px;background:#cdd5df;position:relative;transition:.2s}
+  .tog::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+  .wallet.on .tog{background:var(--pri)}
+  .wallet.on .tog::after{left:21px}
+  .best{background:var(--pri2);border:1px solid var(--pri);border-radius:14px;padding:14px;margin-bottom:12px}
+  .best b{color:var(--pri)}
+  .best.w b{color:#fff}
+  .chips{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .chip{padding:7px 12px;border-radius:20px;border:1px solid var(--line);font-size:13px;cursor:pointer;background:#fff}
+  .chip.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+  .promo{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer}
+  .pct{min-width:58px;text-align:center;font-weight:800;font-size:20px;color:var(--pri)}
+  .promo .t{font-size:14px}
+  .promo .t small{color:var(--mut);display:block}
+  .tag{font-size:11px;background:#fff3dc;color:#9a6200;border-radius:6px;padding:2px 6px;margin-left:4px}
+  .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .back{background:none;border:0;color:var(--pri);font-weight:600;cursor:pointer;padding:0 0 10px}
+  .qr{width:150px;height:150px;margin:12px auto;background:
+      conic-gradient(#000 25%,#fff 0 50%,#000 0 75%,#fff 0) 0 0/30px 30px;border:8px solid #fff;outline:1px solid var(--line)}
+  .phone{position:relative}
+  header{display:flex;align-items:center;gap:12px}
+  #menuBtn{background:#ffffff26;border:0;color:#fff;font-size:22px;width:40px;height:40px;border-radius:10px;cursor:pointer}
+  #ovl{position:absolute;inset:0;background:#0006;opacity:0;pointer-events:none;transition:.25s;z-index:5}
+  #drawer{position:absolute;top:0;bottom:0;left:0;width:75%;background:#fff;z-index:6;transform:translateX(-100%);transition:.25s;padding:20px 12px;box-shadow:4px 0 20px #0003}
+  .open #ovl{opacity:1;pointer-events:auto}
+  .open #drawer{transform:none}
+  #drawer h3{margin:4px 8px 16px;color:var(--pri)}
+  #drawer button{display:block;width:100%;text-align:left;border:0;background:none;padding:14px 12px;border-radius:10px;font-size:16px;color:var(--ink);cursor:pointer}
+  #drawer button.on{background:var(--pri2);color:var(--pri);font-weight:700}
+  #fac{display:none;position:fixed;right:12px;bottom:12px;width:300px;max-height:50vh;overflow:auto;background:#111;color:#9fe;font:12px monospace;padding:10px;border-radius:8px}
+  .note{font-size:11px;color:var(--mut);text-align:center;padding:6px}
+</style>
+</head>
+<body>
+<div class="phone">
+  <header><button id="menuBtn" onclick="toggleMenu()" aria-label="Abrir menú">☰</button><div><small>Supermercado · Sucursal Centro</small><h1 id="title">Bienvenida</h1></div></header>
+  <main id="app"></main>
+  <div class="note">Prototipo de prueba · datos ficticios · Ctrl+Shift+F panel del facilitador</div>
+  <div id="ovl" onclick="toggleMenu()"></div>
+  <aside id="drawer"></aside>
+</div>
+<pre id="fac"></pre>
+
+<script>
+const WALLETS=[
+ {id:'mp',n:'Mercado Pago',c:'#00a1e4'},
+ {id:'dni',n:'Cuenta DNI',c:'#3fa34d'},
+ {id:'modo',n:'MODO',c:'#0b7a3b'},
+ {id:'nx',n:'Naranja X',c:'#ff6a13'},
+ {id:'uala',n:'Ualá',c:'#2a2a72'},
+ {id:'pp',n:'Personal Pay',c:'#9b6bd1'},
+ {id:'bna',n:'BNA+',c:'#0b5c8f'},
+ {id:'efe',n:'Efectivo',c:'#4a5568',otro:true},
+ {id:'tc',n:'Tarjeta de crédito',c:'#b7791f',otro:true}
+];
+const PROMOS=[
+ {id:1,w:'dni',pct:20,t:'Almacén y bebidas',d:'Lunes y martes',tope:'Tope $8.000 por semana',cat:'Almacén'},
+ {id:2,w:'mp',pct:15,t:'Frutas y verduras',d:'Miércoles',tope:'Tope $5.000 por compra',cat:'Fruta y verdura'},
+ {id:3,w:'modo',pct:25,t:'Limpieza y perfumería',d:'Jueves',tope:'Tope $6.000 por mes',cat:'Limpieza'},
+ {id:4,w:'nx',pct:10,t:'Toda la compra',d:'Todos los días',tope:'Tope $3.000 por compra',cat:'Todo'},
+ {id:5,w:'uala',pct:12,t:'Carnes y lácteos',d:'Viernes',tope:'Tope $4.000 por compra',cat:['Carnes','Lácteos']},
+ {id:6,w:'pp',pct:30,t:'Primera compra del mes',d:'Una vez por mes',tope:'Tope $2.500',cat:'Todo'},
+ {id:10,w:'bna',pct:20,t:'Compras de supermercado',d:'Sábados',tope:'Tope $7.000 por mes',cat:'Todo'},
+ {id:13,w:'mp',pct:20,t:'Carnes y pollo',d:'Martes',tope:'Tope $6.000 por compra',cat:'Carnes'},
+ {id:14,w:'dni',pct:15,t:'Lácteos',d:'Miércoles',tope:'Tope $3.000 por semana',cat:'Lácteos'},
+ {id:15,w:'modo',pct:18,t:'Frutas y verduras',d:'Sábados',tope:'Tope $4.000 por mes',cat:'Fruta y verdura'},
+ {id:16,w:'nx',pct:20,t:'Limpieza del hogar',d:'Viernes',tope:'Tope $3.500 por compra',cat:'Limpieza'},
+ {id:17,w:'uala',pct:10,t:'Almacén',d:'Domingos',tope:'Tope $2.000 por compra',cat:'Almacén'},
+ {id:18,w:'pp',pct:15,t:'Bebidas y snacks',d:'Lunes',tope:'Tope $2.500 por compra',cat:'Almacén'},
+ {id:19,w:'bna',pct:25,t:'Carnes',d:'Miércoles',tope:'Tope $5.000 por compra',cat:'Carnes'},
+ {id:21,w:'efe',pct:10,t:'Compras pagadas en efectivo',d:'Todos los días',tope:'Tope $5.000 por compra',cat:'Todo'},
+ {id:22,w:'tc',pct:15,t:'Almacén y limpieza',d:'Jueves',tope:'En 1 pago · Tope $4.000 por compra',cat:['Almacén','Limpieza']},
+ /* Promos globales: w:null = aplican con cualquier medio de pago */
+ {id:7,w:null,pct:20,t:'Carnes',d:'Jueves',tope:'Sin tope',cat:'Carnes'},
+ {id:8,w:null,pct:15,t:'Panadería',d:'Sábados y domingos',tope:'Tope 2 kg por compra',cat:'Almacén'},
+ {id:9,w:null,pct:10,t:'Limpieza (2da unidad)',d:'Todos los días',tope:'Hasta 4 unidades',cat:'Limpieza'},
+ {id:11,w:null,pct:15,t:'Lácteos',d:'Martes',tope:'Hasta 3 unidades por producto',cat:'Lácteos'},
+ {id:12,w:null,pct:25,t:'Frutas y verduras',d:'Lunes',tope:'Hasta 3 kg por compra',cat:'Fruta y verdura'},
+ {id:20,w:null,pct:10,t:'Productos de marca propia',d:'Todos los días',tope:'Sin tope',cat:'Almacén'}
+];
+const S={screen:'home',mine:new Set(),onlyMine:true,cat:'Todas',sel:null};
+const t0=Date.now();const log=[];
+function track(a){log.push(((Date.now()-t0)/1000).toFixed(1)+'s  '+a);document.getElementById('fac').textContent=log.join('\n')}
+document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.shiftKey&&e.key==='F'){const f=document.getElementById('fac');f.style.display=f.style.display==='block'?'none':'block'}});
+const W=id=>WALLETS.find(w=>w.id===id);
+function toggleMenu(){const o=document.querySelector('.phone').classList.toggle('open');track('menú: '+(o?'abierto':'cerrado'))}
+function go(s,x){document.querySelector('.phone').classList.remove('open');S.screen=s;if(x!==undefined)S.sel=x;track('pantalla: '+s+(x?' #'+x:''));render()}
+function render(){
+ const app=document.getElementById('app'),title=document.getElementById('title');
+ const nav=[['home','Inicio'],['wallets','Mis billeteras'],['promos','Promos'],['pay','Pagar']];
+ document.getElementById('drawer').innerHTML='<h3>Menú</h3>'+nav.map(([k,l])=>`<button class="${S.screen===k?'on':''}" onclick="go('${k}')">${l}</button>`).join('');
+ if(S.screen==='home'){
+  title.textContent='Bienvenida, Laura';
+  app.innerHTML=`<p class="mut" style="margin:0 0 6px;font-weight:600">📅 ${hoy()}</p><h2>Estás ingresando al súper</h2>
+   <p class="mut">Te mostramos los descuentos del súper: los generales para todos y los de las billeteras virtuales de tu celu.</p>
+   <div class="best ${S.mine.size?'w':''}" ${S.mine.size?`style="background:${bestNow().w.c};border-color:${bestNow().w.c};color:#fff"`:`onclick="go('wallets')" role="button" style="cursor:pointer;border-style:dashed"`}><b>${S.mine.size?'Hoy te conviene usar: '+bestNow().w.n:'Indicá qué medios de pago usás →'}</b><br>${S.mine.size?bestNow().p.pct+'% en '+bestNow().p.t.toLowerCase():'Tocá acá para elegirlas y sumar sus promos a las generales.'}</div>
+   <div class="row"><span>Promos generales (cualquier medio de pago)</span><b>${PROMOS.filter(p=>!p.w).length}</b></div>
+   <div class="row"><span>Billeteras con promo hoy</span><b>${new Set(PROMOS.filter(p=>p.w&&!W(p.w).otro).map(p=>p.w)).size} de ${WALLETS.filter(w=>!w.otro).length}</b></div>
+   <div class="row"><span>Mayor descuento disponible</span><b>${Math.max(...PROMOS.map(p=>p.pct))}%</b></div>
+   <div class="row"><span>Tus medios de pago</span><b>${S.mine.size?[...S.mine].map(i=>W(i).n).join(', '):'Ninguna todavía'}</b></div>
+   <h2 style="margin-top:16px">Las 3 mejores promos de hoy</h2>
+   ${[...PROMOS].sort((a,b)=>b.pct-a.pct).slice(0,3).map(p=>`<div class="promo" onclick="go('detail',${p.id})"><div class="pct">${p.pct}%</div><div class="t"><b>${p.t}</b><small>${wn(p)} · ${p.d}</small></div></div>`).join('')}
+   <button class="btn" onclick="go('wallets')">Elegir mis billeteras →</button>
+   <button class="btn sec" onclick="go('promos')">Ver todas las promos de hoy</button>
+   <h2 style="margin-top:20px">¿Cómo funciona?</h2>
+   <div class="row"><span>1. Elegís las billeteras que tenés en tu celu</span></div>
+   <div class="row"><span>2. Te mostramos solo las promos que podés usar</span></div>
+   <div class="row"><span>3. Te recomendamos con cuál pagar en la caja</span></div>
+   <p class="mut" style="margin-top:12px">Los descuentos tienen días, topes y condiciones. Los ves en el detalle de cada promo.</p>`;
+ }
+ if(S.screen==='wallets'){
+  title.textContent='Mis billeteras';
+  app.innerHTML=`<button class="back" onclick="go('home')">← Volver</button><p class="mut">Tocá las billeteras que tengas instaladas en tu celu.</p>`+WALLETS.filter(w=>!w.otro).map(wRow).join('')+
+   `<h2 style="margin-top:16px">Otros medios de pago</h2><p class="mut">También tienen descuentos.</p>`+WALLETS.filter(w=>w.otro).map(wRow).join('')+
+   `<button class="btn" onclick="go('promos')">Ver mis promos →</button>`;
+ }
+ if(S.screen==='promos'){
+  title.textContent='Promos de hoy';
+  const cats=['Todas','Almacén','Carnes','Lácteos','Fruta y verdura','Limpieza'];
+  let list=PROMOS.filter(p=>(!S.onlyMine||usable(p))&&(S.cat==='Todas'||[].concat(p.cat).includes(S.cat)||p.cat==='Todo')).sort((a,b)=>b.pct-a.pct);
+  app.innerHTML=`<button class="back" onclick="go('home')">← Volver</button><div class="chips">
+    <span class="chip ${S.onlyMine?'on':''}" onclick="S.onlyMine=!S.onlyMine;track('filtro solo mis billeteras: '+S.onlyMine);render()">Las que puedo usar</span>
+    ${cats.map(c=>`<span class="chip ${S.cat===c?'on':''}" onclick="S.cat='${c}';track('filtro categoría: ${c}');render()">${c}</span>`).join('')}</div>`+
+   (list.length?list.map(p=>`<div class="promo" onclick="go('detail',${p.id})"><div class="pct">${p.pct}%</div>
+     <div class="t"><b>${p.t}</b><small>${wn(p)} · ${p.d}</small></div>${!p.w?'<span class="tag" style="background:#e6f5ef;color:#0a7d5a">Para todos</span>':S.mine.has(p.w)?'':`<span class="tag">${W(p.w).otro?'No lo usás':'No la tenés'}</span>`}</div>`).join(''):
+     `<p class="mut">No hay promos con estos filtros. Probá agregando billeteras o desactivando "Las que puedo usar".</p>`);
+ }
+ if(S.screen==='detail'){
+  const p=PROMOS.find(x=>x.id===S.sel);title.textContent='Detalle de promo';
+  app.innerHTML=`<button class="back" onclick="go('promos')">← Volver</button>
+   <h2>${p.pct}% en ${p.t.toLowerCase()}</h2>
+   <div class="row"><span>${p.w?(W(p.w).otro?'Medio de pago':'Billetera'):'Aplica a'}</span><b>${wn(p)}</b></div>
+   <div class="row"><span>Días</span><b>${p.d}</b></div>
+   <div class="row"><span>Tope</span><b>${p.tope}</b></div>
+   <div class="row"><span>¿Se acumula?</span><b>${p.w?'Sí, con una promo general':'Sí, con una promo de billetera'}</b></div>
+   <div class="row"><span>${p.w?(W(p.w).otro?'¿Lo usás?':'¿La tenés en tu celu?'):'¿Necesito una billetera?'}</span><b>${p.w?(S.mine.has(p.w)?'Sí':'No'):'No, se aplica en la caja'}</b></div>
+   <button class="btn" onclick="go('pay')">Usar en la caja →</button>`;
+ }
+ if(S.screen==='pay'){
+  title.textContent='Pagar en caja';
+  const gl=PROMOS.filter(p=>!p.w&&aplicaHoy(p));
+  const glob=gl.length?gl.map(p=>`<div class="row"><span>${p.pct}% en ${p.t.toLowerCase()} · ${p.d}</span></div>`).join(''):'<p class="mut">Hoy no hay descuentos generales.</p>';
+  if(!S.mine.size){app.innerHTML=`<button class="back" onclick="go('home')">← Volver</button><p class="mut">Indicá qué billeteras usás para recomendarte con cuál pagar.</p><button class="btn" onclick="go('wallets')">Elegir billeteras →</button><h2 style="margin-top:16px">Descuentos que se aplican igual</h2><p class="mut">Valen hoy con cualquier medio de pago.</p>${glob}`;return}
+  const b=bestNow();
+  app.innerHTML=`<button class="back" onclick="go('home')">← Volver</button><div class="best w" style="background:${b.w.c};border-color:${b.w.c};color:#fff"><b>Pagá con ${b.w.n}</b><br>${b.p.pct}% en ${b.p.t.toLowerCase()} · ${b.p.d}<br><small>${b.p.tope}</small></div>
+   <h2>+ Sumá estos descuentos generales de hoy</h2><p class="mut">Se acumulan con la promo de tu billetera. Valen con cualquier medio de pago.</p>${glob}
+   <p class="mut" style="margin-top:12px">Mostrá este código en la caja:</p><div class="qr"></div>
+   <p class="mut" style="text-align:center">Otras opciones: ${otherOpts()}</p>
+   <button class="btn sec" onclick="go('promos')">Comparar promos</button>`;
+ }
+}
+function toggleW(id){S.mine.has(id)?S.mine.delete(id):S.mine.add(id);track('billetera '+id+': '+(S.mine.has(id)?'ON':'OFF'));render()}
+function hoy(){const f=new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});return f.charAt(0).toUpperCase()+f.slice(1)}
+function aplicaHoy(p){const d=p.d.toLowerCase();if(d.includes('todos los días')||d.includes('una vez por mes'))return true;const dia=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][new Date().getDay()];return d.includes(dia)}
+const wRow=w=>`<div class="wallet ${S.mine.has(w.id)?'on':''}" onclick="toggleW('${w.id}')"><div class="dot" style="background:${w.c}">${w.n[0]}</div><div class="n">${w.n}</div><div class="tog"></div></div>`;
+const wn=p=>p.w?W(p.w).n:'Todos los medios de pago';
+const usable=p=>!p.w||S.mine.has(p.w);
+function bestNow(){const l=PROMOS.filter(p=>p.w&&S.mine.has(p.w)).sort((a,b)=>b.pct-a.pct)[0]||PROMOS.find(p=>p.w);return{p:l,w:W(l.w)}}
+function otherOpts(){const b=bestNow().p.id;const o=PROMOS.filter(p=>p.w&&S.mine.has(p.w)&&p.id!==b).sort((a,b)=>b.pct-a.pct).slice(0,2);return o.length?o.map(p=>W(p.w).n+' ('+p.pct+'%)').join(', '):'—'}
+render();
+</script>
+</body>
+</html>
